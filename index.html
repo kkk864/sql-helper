@@ -6,23 +6,23 @@
   <title>SQL Помощник · sql-ex.ru</title>
 
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"></script>
 
   <style>
     :root {
-      --bg: #0d1117;
-      --card: #161b22;
-      --card2: #21262d;
-      --border: #30363d;
+      --bg:      #0d1117;
+      --card:    #161b22;
+      --card2:   #21262d;
+      --border:  #30363d;
       --primary: #2563eb;
-      --primary-hover: #1d4ed8;
-      --text: #e6edf3;
-      --muted: #8b949e;
-      --success: #238636;
-      --danger: #da3633;
+      --text:    #e6edf3;
+      --muted:   #8b949e;
+      --green:   #3fb950;
+      --red:     #f85149;
+      --yellow:  #d29922;
+      --blue:    #58a6ff;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -30,203 +30,114 @@
     body {
       background: var(--bg);
       color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       height: 100dvh;
       display: flex;
       flex-direction: column;
       overflow: hidden;
     }
 
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar { width: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
 
     /* ── Header ── */
-    header {
+    .header {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      gap: 12px;
       padding: 0 20px;
       height: 52px;
       border-bottom: 1px solid var(--border);
       background: var(--card);
       flex-shrink: 0;
-      z-index: 10;
     }
-    .logo { display: flex; align-items: center; gap: 10px; }
     .logo-icon {
       width: 32px; height: 32px;
       background: var(--primary);
       border-radius: 8px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 16px;
+      font-size: 16px; flex-shrink: 0;
     }
     .logo-title { font-weight: 700; font-size: 14px; }
-    .logo-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
-
-    .btn-settings {
-      display: flex; align-items: center; gap: 6px;
-      padding: 6px 12px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: transparent;
+    .logo-sub   { font-size: 11px; color: var(--muted); }
+    .header-count {
+      margin-left: auto;
+      font-size: 12px;
       color: var(--muted);
-      font-size: 13px;
-      cursor: pointer;
-      transition: all 0.15s;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      padding: 3px 10px;
+      border-radius: 20px;
     }
-    .btn-settings:hover { border-color: var(--muted); color: var(--text); }
 
-    /* ── Main layout ── */
-    .main { display: flex; flex: 1; overflow: hidden; }
+    /* ── Layout ── */
+    .layout { display: flex; flex: 1; overflow: hidden; }
 
-    /* ── Left Panel ── */
-    .panel-left {
-      width: 360px;
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 240px;
       flex-shrink: 0;
       border-right: 1px solid var(--border);
       overflow-y: auto;
-      padding: 16px;
+      padding: 12px 8px;
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 4px;
     }
-
-    .field-label {
-      font-size: 11px;
-      font-weight: 600;
+    .sidebar-group-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
       color: var(--muted);
-      letter-spacing: 0.06em;
+      padding: 8px 8px 4px;
       text-transform: uppercase;
-      margin-bottom: 6px;
-      display: block;
     }
-
-    input[type="number"], textarea, select {
-      width: 100%;
-      padding: 8px 12px;
-      background: var(--card2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      font-size: 13px;
-      outline: none;
-      transition: border-color 0.15s;
-      font-family: inherit;
-    }
-    input[type="number"]:focus,
-    textarea:focus,
-    select:focus { border-color: var(--primary); }
-    textarea { resize: vertical; min-height: 120px; line-height: 1.6; }
-    select { cursor: pointer; }
-    select option { background: var(--card2); }
-
-    /* ── Schema Preview ── */
-    .schema-box {
-      background: var(--card2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 12px;
-    }
-    .schema-name {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--muted);
-      margin-bottom: 8px;
-    }
-    .schema-table-row { margin-bottom: 5px; }
-    .schema-table-name { font-size: 12px; font-family: monospace; color: #79c0ff; font-weight: 600; }
-    .schema-cols { font-size: 11px; color: var(--muted); margin-top: 1px; }
-
-    /* ── Mode Toggle ── */
-    .mode-toggle {
-      display: flex;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      overflow: hidden;
-      margin-bottom: 8px;
-    }
-    .mode-btn {
-      flex: 1;
-      padding: 7px;
-      font-size: 12px;
-      font-weight: 500;
-      border: none;
-      cursor: pointer;
-      transition: all 0.15s;
-      background: transparent;
-      color: var(--muted);
-    }
-    .mode-btn.active { background: var(--primary); color: white; }
-
-    /* ── Drop Zone ── */
-    .drop-zone {
-      border: 2px dashed var(--border);
-      border-radius: 8px;
-      padding: 28px 20px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .drop-zone:hover, .drop-zone.drag-over {
-      border-color: var(--primary);
-      background: rgba(37, 99, 235, 0.08);
-    }
-    .drop-zone-icon { font-size: 28px; margin-bottom: 8px; }
-    .drop-zone-text { font-size: 13px; color: var(--muted); }
-    .drop-zone-hint { font-size: 11px; color: var(--border); margin-top: 4px; }
-
-    .image-preview { position: relative; }
-    .image-preview img {
-      width: 100%;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      max-height: 160px;
-      object-fit: contain;
-      background: var(--card2);
-    }
-    .image-clear {
-      width: 100%;
-      margin-top: 6px;
-      padding: 4px;
-      font-size: 12px;
-      background: transparent;
-      border: none;
-      color: var(--muted);
-      cursor: pointer;
-    }
-    .image-clear:hover { color: var(--danger); }
-
-    /* ── Generate Button ── */
-    .btn-generate {
-      width: 100%;
-      padding: 11px;
-      background: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.15s;
+    .sidebar-item {
       display: flex;
       align-items: center;
-      justify-content: center;
       gap: 8px;
+      padding: 7px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.12s;
+      border: 1px solid transparent;
     }
-    .btn-generate:hover:not(:disabled) { background: var(--primary-hover); }
-    .btn-generate:disabled { opacity: 0.6; cursor: not-allowed; }
+    .sidebar-item:hover { background: var(--card2); }
+    .sidebar-item.active {
+      background: rgba(37,99,235,0.15);
+      border-color: rgba(37,99,235,0.3);
+    }
+    .sidebar-num {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--blue);
+      width: 28px;
+      flex-shrink: 0;
+    }
+    .sidebar-title {
+      font-size: 12px;
+      color: var(--text);
+      line-height: 1.3;
+    }
+    .sidebar-item.active .sidebar-title { color: var(--blue); }
+    .sidebar-empty {
+      padding: 20px 10px;
+      font-size: 12px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.6;
+    }
 
-    /* ── Right Panel ── */
-    .panel-right {
+    /* ── Main ── */
+    .main {
       flex: 1;
       overflow-y: auto;
-      padding: 24px 28px;
+      padding: 28px 36px;
     }
 
-    /* ── Empty / Loading States ── */
-    .state-center {
+    /* ── Empty state ── */
+    .empty-state {
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -234,741 +145,442 @@
       height: 100%;
       text-align: center;
     }
-    .state-icon { font-size: 52px; margin-bottom: 16px; }
-    .state-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
-    .state-desc { font-size: 13px; color: var(--muted); max-width: 320px; line-height: 1.6; }
-    .state-steps { margin-top: 20px; display: flex; flex-direction: column; gap: 8px; text-align: left; }
-    .state-step { display: flex; gap: 10px; font-size: 13px; color: var(--muted); }
-    .state-step-num {
-      width: 22px; height: 22px;
+    .empty-icon { font-size: 56px; margin-bottom: 16px; }
+    .empty-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .empty-desc { font-size: 13px; color: var(--muted); max-width: 360px; line-height: 1.7; }
+
+    /* ── Task Content ── */
+    .task-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .task-num  { font-size: 13px; color: var(--blue); font-weight: 700; margin-bottom: 4px; }
+    .task-db   { font-size: 11px; color: var(--muted); }
+    .task-cond {
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.5;
+      margin-top: 6px;
+      max-width: 700px;
+    }
+
+    /* ── Sections ── */
+    .section { margin-bottom: 28px; }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-icon { font-size: 16px; }
+
+    /* Idea */
+    .idea-list { display: flex; flex-direction: column; gap: 8px; }
+    .idea-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .idea-num {
+      width: 24px; height: 24px;
       border-radius: 50%;
-      background: var(--card2);
-      border: 1px solid var(--border);
-      display: flex; align-items: center; justify-content: center;
+      background: rgba(37,99,235,0.2);
+      border: 1px solid rgba(37,99,235,0.4);
+      color: var(--blue);
       font-size: 11px;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
-      color: var(--text);
+      margin-top: 1px;
     }
+    .idea-text { font-size: 13.5px; color: var(--muted); line-height: 1.65; }
 
-    /* ── Loading dots ── */
-    .dots { display: flex; gap: 8px; margin-bottom: 16px; }
-    .dot {
-      width: 10px; height: 10px;
-      border-radius: 50%;
-      background: var(--primary);
-      animation: dot-pulse 1.4s infinite;
+    /* Solution */
+    .solution-block {
+      background: #0d1117;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
     }
-    .dot:nth-child(2) { animation-delay: 0.2s; }
-    .dot:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes dot-pulse {
-      0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
-      40% { opacity: 1; transform: scale(1); }
-    }
-
-    /* ── Result ── */
-    .result-header {
+    .solution-bar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 20px;
-      padding-bottom: 16px;
+      padding: 8px 14px;
       border-bottom: 1px solid var(--border);
+      background: var(--card2);
     }
-    .result-title { font-size: 16px; font-weight: 700; }
-    .result-tag {
-      font-size: 11px;
-      color: var(--muted);
-      margin-top: 3px;
-    }
-    .btn-copy-all {
-      padding: 6px 12px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      background: transparent;
-      color: var(--muted);
-      font-size: 12px;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .btn-copy-all:hover { border-color: var(--muted); color: var(--text); }
-
-    /* ── Prose (Markdown) ── */
-    .prose h2 {
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--text);
-      margin: 24px 0 12px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid var(--border);
-    }
-    .prose h2:first-child { margin-top: 0; }
-
-    .prose p {
-      font-size: 13.5px;
-      color: var(--muted);
-      line-height: 1.75;
-      margin: 8px 0;
-    }
-
-    .prose strong { color: var(--text); font-weight: 600; }
-
-    .prose ol, .prose ul {
-      padding-left: 20px;
-      margin: 8px 0;
-    }
-    .prose ol { list-style: decimal; }
-    .prose ul { list-style: disc; }
-    .prose li {
-      font-size: 13.5px;
-      color: var(--muted);
-      margin: 5px 0;
-      line-height: 1.65;
-    }
-    .prose li strong { color: var(--text); }
-
-    .prose code:not(pre code) {
-      background: rgba(121, 192, 255, 0.12);
-      color: #79c0ff;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 12.5px;
-      font-family: 'Fira Code', 'Consolas', monospace;
-    }
-
-    .prose pre {
-      background: #0d1117 !important;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 16px;
-      overflow-x: auto;
-      margin: 10px 0;
-      position: relative;
-    }
-
-    .prose pre code {
-      font-size: 13px !important;
-      font-family: 'Fira Code', 'Consolas', monospace !important;
-      line-height: 1.7;
-    }
-
+    .solution-bar-label { font-size: 11px; color: var(--muted); font-family: monospace; }
     .copy-btn {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: rgba(37, 99, 235, 0.2);
-      color: #79c0ff;
-      border: 1px solid rgba(37, 99, 235, 0.35);
       padding: 3px 10px;
+      background: rgba(37,99,235,0.2);
+      color: var(--blue);
+      border: 1px solid rgba(37,99,235,0.35);
       border-radius: 5px;
       font-size: 11px;
       cursor: pointer;
       transition: all 0.15s;
       font-family: inherit;
     }
-    .copy-btn:hover { background: rgba(37, 99, 235, 0.4); }
-    .copy-btn.copied { color: #3fb950; border-color: rgba(63, 185, 80, 0.4); background: rgba(63, 185, 80, 0.15); }
+    .copy-btn:hover { background: rgba(37,99,235,0.4); }
+    .copy-btn.copied { color: var(--green); border-color: rgba(63,185,80,0.4); background: rgba(63,185,80,0.15); }
+    .solution-code {
+      padding: 16px;
+      overflow-x: auto;
+    }
+    .solution-code code {
+      font-size: 13.5px !important;
+      font-family: 'Fira Code', 'Consolas', monospace !important;
+      line-height: 1.8 !important;
+    }
 
-    /* ── Modal ── */
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.75);
-      z-index: 100;
-      align-items: center;
-      justify-content: center;
-    }
-    .modal-overlay.open { display: flex; }
-    .modal {
-      background: var(--card);
+    /* Breakdown */
+    .breakdown-list { display: flex; flex-direction: column; gap: 0; }
+    .breakdown-item {
+      display: flex;
+      gap: 0;
       border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 24px;
-      width: 400px;
-      max-width: calc(100vw - 32px);
+      border-radius: 0;
+      overflow: hidden;
     }
-    .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
-    .modal-sub { font-size: 12px; color: var(--muted); margin-bottom: 18px; }
-    .modal-link { color: #58a6ff; text-decoration: underline; }
-    .modal-actions { display: flex; gap: 8px; margin-top: 18px; }
-    .btn-save {
+    .breakdown-item:first-child { border-radius: 8px 8px 0 0; }
+    .breakdown-item:last-child  { border-radius: 0 0 8px 8px; }
+    .breakdown-item:not(:first-child) { border-top: none; }
+    .breakdown-code {
+      width: 280px;
+      flex-shrink: 0;
+      padding: 10px 14px;
+      background: #0d1117;
+      border-right: 1px solid var(--border);
+      font-family: 'Fira Code', 'Consolas', monospace;
+      font-size: 12.5px;
+      color: #79c0ff;
+      display: flex;
+      align-items: center;
+      word-break: break-all;
+    }
+    .breakdown-explain {
       flex: 1;
-      padding: 9px;
-      background: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+      background: var(--card);
+      display: flex;
+      align-items: center;
+    }
+
+    /* Mistakes */
+    .mistake-list { display: flex; flex-direction: column; gap: 12px; }
+    .mistake-card {
+      border: 1px solid rgba(248,81,73,0.25);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .mistake-header {
+      padding: 10px 14px;
+      background: rgba(248,81,73,0.08);
+      border-bottom: 1px solid rgba(248,81,73,0.2);
+    }
+    .mistake-title {
       font-size: 13px;
       font-weight: 600;
-      cursor: pointer;
+      color: var(--red);
     }
-    .btn-save:hover { background: var(--primary-hover); }
-    .btn-cancel {
-      flex: 1;
-      padding: 9px;
-      background: transparent;
-      color: var(--muted);
-      border: 1px solid var(--border);
-      border-radius: 8px;
+    .mistake-code {
+      padding: 10px 14px;
+      background: #0d1117;
+      border-bottom: 1px solid var(--border);
+      font-family: 'Fira Code', 'Consolas', monospace;
+      font-size: 12px;
+      color: #8b949e;
+      white-space: pre-wrap;
+    }
+    .mistake-explain {
+      padding: 10px 14px;
       font-size: 13px;
-      cursor: pointer;
+      color: var(--muted);
+      line-height: 1.6;
     }
-    .btn-cancel:hover { color: var(--text); }
-    .modal-hint { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+
+    /* Knowledge */
+    .knowledge-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 12px;
+    }
+    .knowledge-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+    }
+    .knowledge-term {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--green);
+      margin-bottom: 6px;
+    }
+    .knowledge-text {
+      font-size: 12.5px;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+    .knowledge-example {
+      margin-top: 8px;
+      padding: 6px 10px;
+      background: #0d1117;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 11.5px;
+      color: #79c0ff;
+      white-space: pre-wrap;
+    }
+
+    /* inline code */
+    .ic {
+      background: rgba(121,192,255,0.12);
+      color: #79c0ff;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: monospace;
+    }
 
     .hidden { display: none !important; }
   </style>
 </head>
 <body>
 
-  <!-- ────── Header ────── -->
-  <header>
-    <div class="logo">
-      <div class="logo-icon">⚡</div>
-      <div>
-        <div class="logo-title">SQL Помощник</div>
-        <div class="logo-sub">sql-ex.ru · PostgreSQL · Gemini AI</div>
+  <!-- Header -->
+  <div class="header">
+    <div class="logo-icon">⚡</div>
+    <div>
+      <div class="logo-title">SQL Помощник</div>
+      <div class="logo-sub">sql-ex.ru · PostgreSQL</div>
+    </div>
+    <div class="header-count" id="headerCount">0 задач</div>
+  </div>
+
+  <!-- Layout -->
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-empty" id="sidebarEmpty">
+        Задач пока нет.<br>Они появятся здесь по мере добавления.
       </div>
     </div>
-    <button class="btn-settings" onclick="openSettings()">
-      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-          d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-      </svg>
-      API ключ
-    </button>
-  </header>
 
-  <!-- ────── Main ────── -->
-  <div class="main">
-
-    <!-- Left Panel -->
-    <div class="panel-left">
-
-      <!-- Task number -->
-      <div>
-        <label class="field-label">Номер задания</label>
-        <input id="taskNumber" type="number" placeholder="например, 8" min="1">
-      </div>
-
-      <!-- DB Schema -->
-      <div>
-        <label class="field-label">База данных</label>
-        <select id="dbSchema" onchange="updateSchema()">
-          <option value="computer">Компьютерная фирма (задачи 1–49)</option>
-          <option value="aeroflot">Аэрофлот (задачи 83–118)</option>
-          <option value="ships">Корабли (задачи 14–24)</option>
-          <option value="recycling">Рециклинг (задачи 30–42)</option>
-          <option value="unknown">Не знаю / другая</option>
-        </select>
-      </div>
-
-      <!-- Schema preview -->
-      <div class="schema-box" id="schemaBox"></div>
-
-      <!-- Input mode -->
-      <div>
-        <label class="field-label">Условие задания</label>
-        <div class="mode-toggle">
-          <button class="mode-btn active" id="btnModeText" onclick="setMode('text')">✏️ Текст</button>
-          <button class="mode-btn" id="btnModeImg" onclick="setMode('image')">📷 Скриншот</button>
-        </div>
-
-        <!-- Text input -->
-        <div id="textMode">
-          <textarea id="taskText" placeholder="Вставь условие задания с sql-ex.ru...&#10;&#10;Например: Найдите производителей, выпускающих ПК, но не ноутбуки."></textarea>
-        </div>
-
-        <!-- Image input -->
-        <div id="imageMode" class="hidden">
-          <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
-            <div class="drop-zone-icon">📷</div>
-            <div class="drop-zone-text">Нажми или перетащи скриншот</div>
-            <div class="drop-zone-hint">PNG, JPG, WEBP — до 10 МБ</div>
-          </div>
-          <input id="fileInput" type="file" accept="image/*" class="hidden" onchange="handleFile(event)">
-          <div class="image-preview hidden" id="imgPreview">
-            <img id="previewImg" alt="preview">
-            <button class="image-clear" onclick="clearImage()">✕ Убрать изображение</button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Generate button -->
-      <button class="btn-generate" id="generateBtn" onclick="generate()">
-        <span id="btnIcon">✨</span>
-        <span id="btnLabel">Решить задание</span>
-      </button>
-
-    </div>
-
-    <!-- Right Panel -->
-    <div class="panel-right">
+    <!-- Main -->
+    <div class="main" id="main">
 
       <!-- Empty state -->
-      <div class="state-center" id="stateEmpty">
-        <div class="state-icon">🎯</div>
-        <div class="state-title">Готов решать задачи</div>
-        <div class="state-desc">Введи номер задания и условие слева — получи подробное решение с объяснением</div>
-        <div class="state-steps">
-          <div class="state-step"><div class="state-step-num">1</div><div>Укажи номер задания и выбери базу данных</div></div>
-          <div class="state-step"><div class="state-step-num">2</div><div>Вставь текст условия или загрузи скриншот</div></div>
-          <div class="state-step"><div class="state-step-num">3</div><div>Получи решение, разбор по строкам и базу знаний</div></div>
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">📚</div>
+        <div class="empty-title">Задачи в разработке</div>
+        <div class="empty-desc">
+          Сюда будут добавляться разборы задач с sql-ex.ru:<br>
+          условие, идея решения, готовый SQL-запрос,<br>
+          разбор по строкам, типичные ошибки и база знаний.
         </div>
       </div>
 
-      <!-- Loading state -->
-      <div class="state-center hidden" id="stateLoading">
-        <div class="dots">
-          <div class="dot"></div>
-          <div class="dot"></div>
-          <div class="dot"></div>
-        </div>
-        <div class="state-title" style="font-size:15px;">Генерирую решение...</div>
-        <div class="state-desc">Анализирую задачу и составляю подробное объяснение</div>
-      </div>
-
-      <!-- Result state -->
-      <div class="hidden" id="stateResult">
-        <div class="result-header">
-          <div>
-            <div class="result-title" id="resultTitle">Задание</div>
-            <div class="result-tag" id="resultTag"></div>
-          </div>
-          <button class="btn-copy-all" onclick="copyAll()">📋 Копировать ответ</button>
-        </div>
-        <div class="prose" id="resultContent"></div>
-      </div>
+      <!-- Task view -->
+      <div class="hidden" id="taskView"></div>
 
     </div>
   </div>
 
-  <!-- ────── Settings Modal ────── -->
-  <div class="modal-overlay" id="modalOverlay" onclick="closeSettingsOutside(event)">
-    <div class="modal">
-      <div class="modal-title">⚙️ Настройки</div>
-      <div class="modal-sub">Ключ хранится только в твоём браузере (localStorage)</div>
-
-      <label class="field-label">Провайдер AI</label>
-      <select id="providerSelect" onchange="updateProviderUI()" style="margin-bottom:12px;">
-        <option value="groq">🟢 Groq — бесплатно (Llama 3.3 / DeepSeek R1)</option>
-        <option value="gemini">🔵 Google Gemini — бесплатно (gemini-2.0-flash)</option>
-        <option value="deepseek">🟣 DeepSeek — платно (~$0.001 за запрос)</option>
-      </select>
-
-      <label class="field-label" id="keyLabel">API Ключ</label>
-      <input id="apiKeyInput" type="password" placeholder="" style="margin-bottom:6px;">
-      <div class="modal-hint" id="providerHint"></div>
-
-      <div class="modal-actions">
-        <button class="btn-save" onclick="saveSettings()">Сохранить</button>
-        <button class="btn-cancel" onclick="closeSettings()">Отмена</button>
-      </div>
-    </div>
-  </div>
-
-  <style>
-    .provider-badge {
-      font-size: 11px;
-      padding: 2px 8px;
-      border-radius: 20px;
-      font-weight: 600;
-      margin-left: 8px;
-    }
-    .badge-groq     { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
-    .badge-gemini   { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
-    .badge-deepseek { background: rgba(168,85,247,0.15); color: #c084fc; border: 1px solid rgba(168,85,247,0.3); }
-  </style>
-
+  <!-- ═══════════════════════════════════════════════════════
+       ДАННЫЕ ЗАДАЧ — добавляются автоматически
+       ═══════════════════════════════════════════════════════ -->
   <script>
-  // ── Data ─────────────────────────────────────────────────────────────────
+  const TASKS = [
+    /* TASKS_START */
+    /* TASKS_END */
+  ];
+  </script>
 
-  const SCHEMAS = {
-    computer: {
-      label: 'Компьютерная фирма',
-      tables: [
-        { name: 'Product', cols: 'maker, model (PK), type' },
-        { name: 'PC', cols: 'code (PK), model (FK), speed, ram, hd, cd, price' },
-        { name: 'Laptop', cols: 'code (PK), model (FK), speed, ram, hd, screen, price' },
-        { name: 'Printer', cols: 'code (PK), model (FK), color, type, price' },
-      ],
-      desc: `База "Компьютерная фирма":
-- Product(maker, model PK, type) — type: 'PC' | 'Laptop' | 'Printer'
-- PC(code PK, model FK, speed, ram, hd, cd, price)
-- Laptop(code PK, model FK, speed, ram, hd, screen, price)
-- Printer(code PK, model FK, color char(1), type, price)  — color: 'y'=цветной, 'n'=ч/б`
-    },
-    aeroflot: {
-      label: 'Аэрофлот',
-      tables: [
-        { name: 'Company', cols: 'ID_comp (PK), name' },
-        { name: 'Trip', cols: 'trip_no (PK), ID_comp (FK), plane, town_from, town_to, time_out, time_in' },
-        { name: 'Passenger', cols: 'ID_psg (PK), name' },
-        { name: 'Pass_in_trip', cols: 'trip_no (FK) + date + ID_psg (FK) = PK, place' },
-      ],
-      desc: `База "Аэрофлот":
-- Company(ID_comp PK, name)
-- Trip(trip_no PK, ID_comp FK, plane, town_from, town_to, time_out, time_in)
-- Passenger(ID_psg PK, name) — имена пассажиров не уникальны, есть тёзки!
-- Pass_in_trip(trip_no FK, date, ID_psg FK, place) — PK составной`
-    },
-    ships: {
-      label: 'Корабли',
-      tables: [
-        { name: 'Classes', cols: 'class (PK), type, country, numGuns, bore, displacement' },
-        { name: 'Ships', cols: 'name (PK), class (FK), launched' },
-        { name: 'Battles', cols: 'name (PK), date' },
-        { name: 'Outcomes', cols: 'ship, battle (FK), result' },
-      ],
-      desc: `База "Корабли":
-- Classes(class PK, type bb|bc, country, numGuns, bore, displacement)
-- Ships(name PK, class FK→Classes, launched)
-- Battles(name PK, date)
-- Outcomes(ship, battle FK→Battles, result: sunk|damaged|OK)
-  Важно: ship в Outcomes — НЕ FK (головной корабль класса может не быть в Ships)`
-    },
-    recycling: {
-      label: 'Рециклинг',
-      tables: [
-        { name: 'Income', cols: 'point, date, inc (нет PK — несколько строк в день)' },
-        { name: 'Outcome', cols: 'point, date, out (нет PK — несколько строк в день)' },
-        { name: 'Income_o', cols: 'point (PK), date (PK), inc' },
-        { name: 'Outcome_o', cols: 'point (PK), date (PK), out' },
-      ],
-      desc: `База "Пункты рециклинга":
-- Income(point, date, inc) — без PK, несколько записей в день возможны
-- Outcome(point, date, out) — без PK, несколько записей в день возможны
-- Income_o(point PK, date PK, inc) — одна запись в день
-- Outcome_o(point PK, date PK, out) — одна запись в день`
-    },
-    unknown: {
-      label: 'Другая',
-      tables: [],
-      desc: ''
-    }
-  };
+  <!-- ═══ UI Logic ═══ -->
+  <script>
+  let activeId = null;
 
-  const SYSTEM_PROMPT = `Ты SQL-помощник для студентов, решающих задачи на sql-ex.ru (СУБД PostgreSQL).
+  function init() {
+    renderSidebar();
+    if (TASKS.length > 0) selectTask(TASKS[0].id);
+    updateCount();
+  }
 
-Структурируй ответ СТРОГО в следующем Markdown-формате:
+  function updateCount() {
+    document.getElementById('headerCount').textContent =
+      TASKS.length === 0 ? 'Нет задач' :
+      TASKS.length === 1 ? '1 задача' :
+      TASKS.length < 5  ? `${TASKS.length} задачи` :
+                          `${TASKS.length} задач`;
+  }
 
-## 💡 Идея решения
-[3–4 пронумерованных шага — логический подход к задаче]
+  function renderSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const empty   = document.getElementById('sidebarEmpty');
+    if (TASKS.length === 0) { empty.classList.remove('hidden'); return; }
+    empty.classList.add('hidden');
 
-## ✅ Готовое решение
-\`\`\`sql
-[Полный правильный SQL-запрос для PostgreSQL]
-\`\`\`
+    // Group by db
+    const groups = {};
+    TASKS.forEach(t => {
+      if (!groups[t.db]) groups[t.db] = [];
+      groups[t.db].push(t);
+    });
 
-## 📝 Разбор по строкам
-[Для каждой ключевой строки: \`строка кода\` — объяснение её роли]
+    sidebar.innerHTML = '';
+    Object.entries(groups).forEach(([db, tasks]) => {
+      const label = document.createElement('div');
+      label.className = 'sidebar-group-label';
+      label.textContent = db;
+      sidebar.appendChild(label);
+      tasks.forEach(t => {
+        const item = document.createElement('div');
+        item.className = 'sidebar-item';
+        item.id = `nav-${t.id}`;
+        item.innerHTML = `<span class="sidebar-num">#${t.id}</span><span class="sidebar-title">${t.title}</span>`;
+        item.onclick = () => selectTask(t.id);
+        sidebar.appendChild(item);
+      });
+    });
+  }
 
-## ❌ Типичные ошибки
-[2–3 частые ошибки: **Название ошибки** + код в sql-блоке + почему неверно]
+  function selectTask(id) {
+    activeId = id;
+    const task = TASKS.find(t => t.id === id);
+    if (!task) return;
 
-## 📚 База знаний
-[3–5 концепций SQL из этой задачи: **Концепция** — краткое объяснение с мини-примером]
+    // Update sidebar active state
+    document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+    const nav = document.getElementById(`nav-${id}`);
+    if (nav) nav.classList.add('active');
 
-Отвечай строго на русском языке. Будь конкретным и образовательным.`;
+    // Show task view
+    document.getElementById('emptyState').classList.add('hidden');
+    const view = document.getElementById('taskView');
+    view.classList.remove('hidden');
+    view.innerHTML = renderTask(task);
 
-  // ── State ──────────────────────────────────────────────────────────────────
-  let mode = 'text';
-  let uploadedImage = null;
-  let lastMarkdown = '';
+    // Highlight SQL
+    view.querySelectorAll('pre code').forEach(b => hljs.highlightElement(b));
 
+    // Scroll to top
+    document.getElementById('main').scrollTop = 0;
+  }
 
-  // ── Schema ─────────────────────────────────────────────────────────────────
-  function updateSchema() {
-    const key = document.getElementById('dbSchema').value;
-    const schema = SCHEMAS[key];
-    const box = document.getElementById('schemaBox');
-
-    if (!schema.tables.length) {
-      box.innerHTML = '<div style="font-size:12px;color:var(--muted)">Опиши таблицы в условии задания</div>';
-      return;
-    }
-
-    box.innerHTML = `
-      <div class="schema-name">${schema.label}</div>
-      ${schema.tables.map(t => `
-        <div class="schema-table-row">
-          <div class="schema-table-name">${t.name}</div>
-          <div class="schema-cols">${t.cols}</div>
+  function renderTask(t) {
+    return `
+      <!-- Header -->
+      <div class="task-header">
+        <div>
+          <div class="task-num">Задание №${t.id}</div>
+          <div class="task-db">📦 ${t.db} · PostgreSQL</div>
+          <div class="task-cond">${t.condition}</div>
         </div>
-      `).join('')}
+      </div>
+
+      <!-- Идея решения -->
+      <div class="section">
+        <div class="section-title"><span class="section-icon">💡</span> Идея решения</div>
+        <div class="idea-list">
+          ${t.idea.map((step, i) => `
+            <div class="idea-item">
+              <div class="idea-num">${i+1}</div>
+              <div class="idea-text">${step}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <!-- Решение -->
+      <div class="section">
+        <div class="section-title"><span class="section-icon">✅</span> Готовое решение</div>
+        <div class="solution-block">
+          <div class="solution-bar">
+            <span class="solution-bar-label">sql · PostgreSQL</span>
+            <button class="copy-btn" onclick="copySQL(this, ${t.id})">Копировать</button>
+          </div>
+          <div class="solution-code"><pre><code class="language-sql">${escHtml(t.solution)}</code></pre></div>
+        </div>
+      </div>
+
+      <!-- Разбор -->
+      <div class="section">
+        <div class="section-title"><span class="section-icon">📝</span> Разбор по строкам</div>
+        <div class="breakdown-list">
+          ${t.breakdown.map(b => `
+            <div class="breakdown-item">
+              <div class="breakdown-code">${escHtml(b.code)}</div>
+              <div class="breakdown-explain">${b.explain}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <!-- Ошибки -->
+      <div class="section">
+        <div class="section-title"><span class="section-icon">❌</span> Типичные ошибки</div>
+        <div class="mistake-list">
+          ${t.mistakes.map(m => `
+            <div class="mistake-card">
+              <div class="mistake-header"><div class="mistake-title">❌ ${m.title}</div></div>
+              <div class="mistake-code">${escHtml(m.code)}</div>
+              <div class="mistake-explain">${m.explain}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <!-- База знаний -->
+      <div class="section">
+        <div class="section-title"><span class="section-icon">📚</span> База знаний</div>
+        <div class="knowledge-grid">
+          ${t.knowledge.map(k => `
+            <div class="knowledge-card">
+              <div class="knowledge-term">${k.term}</div>
+              <div class="knowledge-text">${k.text}</div>
+              ${k.example ? `<div class="knowledge-example">${escHtml(k.example)}</div>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </div>
     `;
   }
 
-  // ── Input mode ─────────────────────────────────────────────────────────────
-  function setMode(m) {
-    mode = m;
-    const isText = m === 'text';
-    document.getElementById('textMode').classList.toggle('hidden', !isText);
-    document.getElementById('imageMode').classList.toggle('hidden', isText);
-    document.getElementById('btnModeText').classList.toggle('active', isText);
-    document.getElementById('btnModeImg').classList.toggle('active', !isText);
-  }
-
-  // ── Drag & Drop ────────────────────────────────────────────────────────────
-  function setupDragDrop() {
-    const zone = document.getElementById('dropZone');
-    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
-    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
-    zone.addEventListener('drop', e => {
-      e.preventDefault();
-      zone.classList.remove('drag-over');
-      const file = e.dataTransfer.files[0];
-      if (file?.type.startsWith('image/')) processImage(file);
-    });
-  }
-
-  function handleFile(e) { processImage(e.target.files[0]); }
-
-  function processImage(file) {
-    const reader = new FileReader();
-    reader.onload = e => {
-      const src = e.target.result;
-      uploadedImage = { data: src.split(',')[1], mimeType: file.type };
-      document.getElementById('previewImg').src = src;
-      document.getElementById('imgPreview').classList.remove('hidden');
-      document.getElementById('dropZone').classList.add('hidden');
-    };
-    reader.readAsDataURL(file);
-  }
-
-  function clearImage() {
-    uploadedImage = null;
-    document.getElementById('imgPreview').classList.add('hidden');
-    document.getElementById('dropZone').classList.remove('hidden');
-    document.getElementById('fileInput').value = '';
-  }
-
-  // ── Provider config ────────────────────────────────────────────────────────
-  const PROVIDERS = {
-    groq: {
-      label: 'Groq',
-      badgeClass: 'badge-groq',
-      placeholder: 'gsk_...',
-      hint: `Бесплатно, без карты:<br>1. Зарегистрируйся на <a href="https://console.groq.com" target="_blank" class="modal-link">console.groq.com</a><br>2. API Keys → Create API Key<br>Модель: <strong>llama-3.3-70b-versatile</strong> (14 400 запросов/день бесплатно)`,
-      storageKey: 'groq_api_key',
-    },
-    gemini: {
-      label: 'Gemini',
-      badgeClass: 'badge-gemini',
-      placeholder: 'AIzaSy...',
-      hint: `Бесплатно, без карты:<br>Получи ключ на <a href="https://aistudio.google.com/app/apikey" target="_blank" class="modal-link">aistudio.google.com</a><br>Модель: <strong>gemini-2.0-flash</strong> (1500 запросов/день бесплатно)`,
-      storageKey: 'gemini_api_key',
-    },
-    deepseek: {
-      label: 'DeepSeek',
-      badgeClass: 'badge-deepseek',
-      placeholder: 'sk-...',
-      hint: `Платный, очень дёшево (~$0.001/запрос):<br>Получи ключ на <a href="https://platform.deepseek.com/api_keys" target="_blank" class="modal-link">platform.deepseek.com</a><br>Модель: <strong>deepseek-chat</strong>`,
-      storageKey: 'deepseek_api_key',
-    },
-  };
-
-  function updateProviderUI() {
-    const pKey = document.getElementById('providerSelect').value;
-    const p = PROVIDERS[pKey];
-    document.getElementById('apiKeyInput').placeholder = p.placeholder;
-    document.getElementById('providerHint').innerHTML = p.hint;
-    document.getElementById('apiKeyInput').value = localStorage.getItem(p.storageKey) || '';
-  }
-
-  function getActiveProvider() {
-    return localStorage.getItem('active_provider') || 'groq';
-  }
-
-  function updateHeaderBadge(providerKey) {
-    const p = PROVIDERS[providerKey];
-    let badge = document.getElementById('providerBadge');
-    if (!badge) {
-      badge = document.createElement('span');
-      badge.id = 'providerBadge';
-      badge.className = 'provider-badge';
-      document.querySelector('.logo-sub').appendChild(badge);
-    }
-    badge.className = `provider-badge ${p.badgeClass}`;
-    badge.textContent = p.label;
-  }
-
-  // ── Generate ───────────────────────────────────────────────────────────────
-  async function generate() {
-    const providerKey = getActiveProvider();
-    const p = PROVIDERS[providerKey];
-    const apiKey = localStorage.getItem(p.storageKey);
-    if (!apiKey) { openSettings(); return; }
-
-    const num    = document.getElementById('taskNumber').value.trim();
-    const text   = document.getElementById('taskText').value.trim();
-    const dbKey  = document.getElementById('dbSchema').value;
-    const schema = SCHEMAS[dbKey];
-
-    if (mode === 'text' && !text) { alert('Введи условие задания!'); return; }
-    if (mode === 'image' && !uploadedImage) { alert('Загрузи скриншот задания!'); return; }
-
-    setState('loading');
-
-    const userMsg = [
-      num ? `Задание №${num}:` : 'Задание:',
-      mode === 'text' ? text : '(условие на скриншоте выше)',
-      schema.desc ? `\nБаза данных:\n${schema.desc}` : ''
-    ].join('\n');
-
-    const parts = [{ text: SYSTEM_PROMPT + '\n\n' + userMsg }];
-    if (mode === 'image' && uploadedImage) {
-      parts.push({ inline_data: { mime_type: uploadedImage.mimeType, data: uploadedImage.data } });
-    }
-
-    try {
-      const answer = await callAI(providerKey, apiKey, SYSTEM_PROMPT + '\n\n' + userMsg, uploadedImage);
-
-      lastMarkdown = answer;
-      renderResult(num, dbKey, answer);
-      setState('result');
-
-    } catch (err) {
-      setState('empty');
-      alert('Ошибка: ' + err.message + '\n\nПроверь API ключ в настройках.');
-    }
-  }
-
-  // ── AI routing ─────────────────────────────────────────────────────────────
-  async function callAI(providerKey, apiKey, prompt, image) {
-    if (providerKey === 'gemini') {
-      const parts = [{ text: prompt }];
-      if (image) parts.push({ inline_data: { mime_type: image.mimeType, data: image.data } });
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-        { method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts }] }) }
-      );
-      if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error?.message || `HTTP ${res.status}`); }
-      const data = await res.json();
-      return data.candidates?.[0]?.content?.parts?.[0]?.text || (() => { throw new Error('Пустой ответ'); })();
-    }
-
-    if (providerKey === 'groq') {
-      const messages = [{ role: 'user', content: prompt }];
-      // Groq doesn't support image in standard endpoint for free, append as text note
-      if (image) messages[0].content += '\n[Скриншот задания прикреплён пользователем — опиши и реши задачу по контексту]';
-      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-        body: JSON.stringify({ model: 'llama-3.3-70b-versatile', messages, temperature: 0.3 })
-      });
-      if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error?.message || `HTTP ${res.status}`); }
-      const data = await res.json();
-      return data.choices?.[0]?.message?.content || (() => { throw new Error('Пустой ответ'); })();
-    }
-
-    if (providerKey === 'deepseek') {
-      const messages = [{ role: 'user', content: prompt }];
-      if (image) messages[0].content += '\n[Скриншот задания прикреплён пользователем — опиши и реши задачу по контексту]';
-      const res = await fetch('https://api.deepseek.com/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-        body: JSON.stringify({ model: 'deepseek-chat', messages, temperature: 0.3 })
-      });
-      if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error?.message || `HTTP ${res.status}`); }
-      const data = await res.json();
-      return data.choices?.[0]?.message?.content || (() => { throw new Error('Пустой ответ'); })();
-    }
-
-    throw new Error('Неизвестный провайдер');
-  }
-
-
-
-  // ── Render Result ──────────────────────────────────────────────────────────
-  function renderResult(num, dbKey, markdown) {
-    document.getElementById('resultTitle').textContent = num
-      ? `Задание №${num}`
-      : 'Решение задания';
-    document.getElementById('resultTag').textContent = SCHEMAS[dbKey]?.label
-      ? `📦 ${SCHEMAS[dbKey].label} · PostgreSQL`
-      : 'PostgreSQL';
-
-    marked.setOptions({ gfm: true, breaks: true });
-    const html = marked.parse(markdown);
-    const content = document.getElementById('resultContent');
-    content.innerHTML = html;
-
-    // Syntax highlight + copy buttons
-    content.querySelectorAll('pre code').forEach(block => {
-      hljs.highlightElement(block);
-      const pre = block.parentElement;
-      const btn = document.createElement('button');
-      btn.className = 'copy-btn';
-      btn.textContent = 'Копировать';
-      btn.onclick = () => {
-        navigator.clipboard.writeText(block.textContent.trim()).then(() => {
-          btn.textContent = '✓ Скопировано';
-          btn.classList.add('copied');
-          setTimeout(() => {
-            btn.textContent = 'Копировать';
-            btn.classList.remove('copied');
-          }, 2000);
-        });
-      };
-      pre.appendChild(btn);
-    });
-  }
-
-  // ── UI State ────────────────────────────────────────────────────────────────
-  function setState(s) {
-    document.getElementById('stateEmpty').classList.toggle('hidden', s !== 'empty');
-    document.getElementById('stateLoading').classList.toggle('hidden', s !== 'loading');
-    document.getElementById('stateResult').classList.toggle('hidden', s !== 'result');
-
-    const btn = document.getElementById('generateBtn');
-    btn.disabled = s === 'loading';
-    document.getElementById('btnIcon').textContent  = s === 'loading' ? '⏳' : '✨';
-    document.getElementById('btnLabel').textContent = s === 'loading' ? 'Генерирую...' : 'Решить задание';
-  }
-
-  function copyAll() {
-    navigator.clipboard.writeText(lastMarkdown).then(() => {
-      const btn = event.target;
+  function copySQL(btn, taskId) {
+    const task = TASKS.find(t => t.id === taskId);
+    if (!task) return;
+    navigator.clipboard.writeText(task.solution).then(() => {
       btn.textContent = '✓ Скопировано';
-      setTimeout(() => btn.textContent = '📋 Копировать ответ', 2000);
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Копировать'; btn.classList.remove('copied'); }, 2000);
     });
   }
 
-  // ── Settings Modal ─────────────────────────────────────────────────────────
-  function openSettings() {
-    const active = getActiveProvider();
-    document.getElementById('providerSelect').value = active;
-    updateProviderUI();
-    document.getElementById('modalOverlay').classList.add('open');
-  }
-  function closeSettings() {
-    document.getElementById('modalOverlay').classList.remove('open');
-  }
-  function closeSettingsOutside(e) {
-    if (e.target === document.getElementById('modalOverlay')) closeSettings();
-  }
-  function saveSettings() {
-    const pKey = document.getElementById('providerSelect').value;
-    const key  = document.getElementById('apiKeyInput').value.trim();
-    if (!key) { alert('Введи API ключ!'); return; }
-    localStorage.setItem(PROVIDERS[pKey].storageKey, key);
-    localStorage.setItem('active_provider', pKey);
-    updateHeaderBadge(pKey);
-    closeSettings();
+  function escHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
   }
 
-  // ── Init ───────────────────────────────────────────────────────────────────
-  window.addEventListener('load', () => {
-    const active = getActiveProvider();
-    const p = PROVIDERS[active];
-    if (!localStorage.getItem(p.storageKey)) openSettings();
-    else updateHeaderBadge(active);
-    updateSchema();
-    setupDragDrop();
-  });
+  init();
   </script>
 </body>
 </html>
