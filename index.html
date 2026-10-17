@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SQL Помощник · sql-ex.ru</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/sql.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #0d1117;
+      --card: #161b22;
+      --card2: #21262d;
+      --border: #30363d;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --success: #238636;
+      --danger: #da3633;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', sans-serif;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 52px;
+      border-bottom: 1px solid var(--border);
+      background: var(--card);
+      flex-shrink: 0;
+      z-index: 10;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-icon {
+      width: 32px; height: 32px;
+      background: var(--primary);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+    .logo-title { font-weight: 700; font-size: 14px; }
+    .logo-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+    .btn-settings {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-settings:hover { border-color: var(--muted); color: var(--text); }
+
+    /* ── Main layout ── */
+    .main { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── Left Panel ── */
+    .panel-left {
+      width: 360px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .field-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    input[type="number"], textarea, select {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.15s;
+      font-family: inherit;
+    }
+    input[type="number"]:focus,
+    textarea:focus,
+    select:focus { border-color: var(--primary); }
+    textarea { resize: vertical; min-height: 120px; line-height: 1.6; }
+    select { cursor: pointer; }
+    select option { background: var(--card2); }
+
+    /* ── Schema Preview ── */
+    .schema-box {
+      background: var(--card2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+    .schema-name {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .schema-table-row { margin-bottom: 5px; }
+    .schema-table-name { font-size: 12px; font-family: monospace; color: #79c0ff; font-weight: 600; }
+    .schema-cols { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+    /* ── Mode Toggle ── */
+    .mode-toggle {
+      display: flex;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .mode-btn {
+      flex: 1;
+      padding: 7px;
+      font-size: 12px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s;
+      background: transparent;
+      color: var(--muted);
+    }
+    .mode-btn.active { background: var(--primary); color: white; }
+
+    /* ── Drop Zone ── */
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      padding: 28px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: var(--primary);
+      background: rgba(37, 99, 235, 0.08);
+    }
+    .drop-zone-icon { font-size: 28px; margin-bottom: 8px; }
+    .drop-zone-text { font-size: 13px; color: var(--muted); }
+    .drop-zone-hint { font-size: 11px; color: var(--border); margin-top: 4px; }
+
+    .image-preview { position: relative; }
+    .image-preview img {
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      max-height: 160px;
+      object-fit: contain;
+      background: var(--card2);
+    }
+    .image-clear {
+      width: 100%;
+      margin-top: 6px;
+      padding: 4px;
+      font-size: 12px;
+      background: transparent;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+    }
+    .image-clear:hover { color: var(--danger); }
+
+    /* ── Generate Button ── */
+    .btn-generate {
+      width: 100%;
+      padding: 11px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-generate:hover:not(:disabled) { background: var(--primary-hover); }
+    .btn-generate:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* ── Right Panel ── */
+    .panel-right {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 28px;
+    }
+
+    /* ── Empty / Loading States ── */
+    .state-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      text-align: center;
+    }
+    .state-icon { font-size: 52px; margin-bottom: 16px; }
+    .state-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+    .state-desc { font-size: 13px; color: var(--muted); max-width: 320px; line-height: 1.6; }
+    .state-steps { margin-top: 20px; display: flex; flex-direction: column; gap: 8px; text-align: left; }
+    .state-step { display: flex; gap: 10px; font-size: 13px; color: var(--muted); }
+    .state-step-num {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: var(--card2);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px;
+      flex-shrink: 0;
+      color: var(--text);
+    }
+
+    /* ── Loading dots ── */
+    .dots { display: flex; gap: 8px; margin-bottom: 16px; }
+    .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--primary);
+      animation: dot-pulse 1.4s infinite;
+    }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes dot-pulse {
+      0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
+      40% { opacity: 1; transform: scale(1); }
+    }
+
+    /* ── Result ── */
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .result-title { font-size: 16px; font-weight: 700; }
+    .result-tag {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+    .btn-copy-all {
+      padding: 6px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-copy-all:hover { border-color: var(--muted); color: var(--text); }
+
+    /* ── Prose (Markdown) ── */
+    .prose h2 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      margin: 24px 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .prose h2:first-child { margin-top: 0; }
+
+    .prose p {
+      font-size: 13.5px;
+      color: var(--muted);
+      line-height: 1.75;
+      margin: 8px 0;
+    }
+
+    .prose strong { color: var(--text); font-weight: 600; }
+
+    .prose ol, .prose ul {
+      padding-left: 20px;
+      margin: 8px 0;
+    }
+    .prose ol { list-style: decimal; }
+    .prose ul { list-style: disc; }
+    .prose li {
+      font-size: 13.5px;
+      color: var(--muted);
+      margin: 5px 0;
+      line-height: 1.65;
+    }
+    .prose li strong { color: var(--text); }
+
+    .prose code:not(pre code) {
+      background: rgba(121, 192, 255, 0.12);
+      color: #79c0ff;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12.5px;
+      font-family: 'Fira Code', 'Consolas', monospace;
+    }
+
+    .prose pre {
+      background: #0d1117 !important;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      overflow-x: auto;
+      margin: 10px 0;
+      position: relative;
+    }
+
+    .prose pre code {
+      font-size: 13px !important;
+      font-family: 'Fira Code', 'Consolas', monospace !important;
+      line-height: 1.7;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(37, 99, 235, 0.2);
+      color: #79c0ff;
+      border: 1px solid rgba(37, 99, 235, 0.35);
+      padding: 3px 10px;
+      border-radius: 5px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .copy-btn:hover { background: rgba(37, 99, 235, 0.4); }
+    .copy-btn.copied { color: #3fb950; border-color: rgba(63, 185, 80, 0.4); background: rgba(63, 185, 80, 0.15); }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      width: 400px;
+      max-width: calc(100vw - 32px);
+    }
+    .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+    .modal-sub { font-size: 12px; color: var(--muted); margin-bottom: 18px; }
+    .modal-link { color: #58a6ff; text-decoration: underline; }
+    .modal-actions { display: flex; gap: 8px; margin-top: 18px; }
+    .btn-save {
+      flex: 1;
+      padding: 9px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-save:hover { background: var(--primary-hover); }
+    .btn-cancel {
+      flex: 1;
+      padding: 9px;
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .btn-cancel:hover { color: var(--text); }
+    .modal-hint { font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.5; }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <!-- ────── Header ────── -->
+  <header>
+    <div class="logo">
+      <div class="logo-icon">⚡</div>
+      <div>
+        <div class="logo-title">SQL Помощник</div>
+        <div class="logo-sub">sql-ex.ru · PostgreSQL · Gemini AI</div>
+      </div>
+    </div>
+    <button class="btn-settings" onclick="openSettings()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+      </svg>
+      API ключ
+    </button>
+  </header>
+
+  <!-- ────── Main ────── -->
+  <div class="main">
+
+    <!-- Left Panel -->
+    <div class="panel-left">
+
+      <!-- Task number -->
+      <div>
+        <label class="field-label">Номер задания</label>
+        <input id="taskNumber" type="number" placeholder="например, 8" min="1">
+      </div>
+
+      <!-- DB Schema -->
+      <div>
+        <label class="field-label">База данных</label>
+        <select id="dbSchema" onchange="updateSchema()">
+          <option value="computer">Компьютерная фирма (задачи 1–49)</option>
+          <option value="aeroflot">Аэрофлот (задачи 83–118)</option>
+          <option value="ships">Корабли (задачи 14–24)</option>
+          <option value="recycling">Рециклинг (задачи 30–42)</option>
+          <option value="unknown">Не знаю / другая</option>
+        </select>
+      </div>
+
+      <!-- Schema preview -->
+      <div class="schema-box" id="schemaBox"></div>
+
+      <!-- Input mode -->
+      <div>
+        <label class="field-label">Условие задания</label>
+        <div class="mode-toggle">
+          <button class="mode-btn active" id="btnModeText" onclick="setMode('text')">✏️ Текст</button>
+          <button class="mode-btn" id="btnModeImg" onclick="setMode('image')">📷 Скриншот</button>
+        </div>
+
+        <!-- Text input -->
+        <div id="textMode">
+          <textarea id="taskText" placeholder="Вставь условие задания с sql-ex.ru...&#10;&#10;Например: Найдите производителей, выпускающих ПК, но не ноутбуки."></textarea>
+        </div>
+
+        <!-- Image input -->
+        <div id="imageMode" class="hidden">
+          <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+            <div class="drop-zone-icon">📷</div>
+            <div class="drop-zone-text">Нажми или перетащи скриншот</div>
+            <div class="drop-zone-hint">PNG, JPG, WEBP — до 10 МБ</div>
+          </div>
+          <input id="fileInput" type="file" accept="image/*" class="hidden" onchange="handleFile(event)">
+          <div class="image-preview hidden" id="imgPreview">
+            <img id="previewImg" alt="preview">
+            <button class="image-clear" onclick="clearImage()">✕ Убрать изображение</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Generate button -->
+      <button class="btn-generate" id="generateBtn" onclick="generate()">
+        <span id="btnIcon">✨</span>
+        <span id="btnLabel">Решить задание</span>
+      </button>
+
+    </div>
+
+    <!-- Right Panel -->
+    <div class="panel-right">
+
+      <!-- Empty state -->
+      <div class="state-center" id="stateEmpty">
+        <div class="state-icon">🎯</div>
+        <div class="state-title">Готов решать задачи</div>
+        <div class="state-desc">Введи номер задания и условие слева — получи подробное решение с объяснением</div>
+        <div class="state-steps">
+          <div class="state-step"><div class="state-step-num">1</div><div>Укажи номер задания и выбери базу данных</div></div>
+          <div class="state-step"><div class="state-step-num">2</div><div>Вставь текст условия или загрузи скриншот</div></div>
+          <div class="state-step"><div class="state-step-num">3</div><div>Получи решение, разбор по строкам и базу знаний</div></div>
+        </div>
+      </div>
+
+      <!-- Loading state -->
+      <div class="state-center hidden" id="stateLoading">
+        <div class="dots">
+          <div class="dot"></div>
+          <div class="dot"></div>
+          <div class="dot"></div>
+        </div>
+        <div class="state-title" style="font-size:15px;">Генерирую решение...</div>
+        <div class="state-desc">Анализирую задачу и составляю подробное объяснение</div>
+      </div>
+
+      <!-- Result state -->
+      <div class="hidden" id="stateResult">
+        <div class="result-header">
+          <div>
+            <div class="result-title" id="resultTitle">Задание</div>
+            <div class="result-tag" id="resultTag"></div>
+          </div>
+          <button class="btn-copy-all" onclick="copyAll()">📋 Копировать ответ</button>
+        </div>
+        <div class="prose" id="resultContent"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ────── Settings Modal ────── -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeSettingsOutside(event)">
+    <div class="modal">
+      <div class="modal-title">⚙️ Настройки</div>
+      <div class="modal-sub">Ключ хранится только в твоём браузере (localStorage)</div>
+
+      <label class="field-label">Gemini API Ключ</label>
+      <input id="apiKeyInput" type="password" placeholder="AIzaSy..." style="margin-bottom:6px;">
+      <div class="modal-hint">
+        Получить бесплатно: <a href="https://aistudio.google.com/app/apikey" target="_blank" class="modal-link">aistudio.google.com</a><br>
+        Используется модель <strong>gemini-2.0-flash</strong> (бесплатный тариф)
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-save" onclick="saveSettings()">Сохранить</button>
+        <button class="btn-cancel" onclick="closeSettings()">Отмена</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  // ── Data ─────────────────────────────────────────────────────────────────
+
+  const SCHEMAS = {
+    computer: {
+      label: 'Компьютерная фирма',
+      tables: [
+        { name: 'Product', cols: 'maker, model (PK), type' },
+        { name: 'PC', cols: 'code (PK), model (FK), speed, ram, hd, cd, price' },
+        { name: 'Laptop', cols: 'code (PK), model (FK), speed, ram, hd, screen, price' },
+        { name: 'Printer', cols: 'code (PK), model (FK), color, type, price' },
+      ],
+      desc: `База "Компьютерная фирма":
+- Product(maker, model PK, type) — type: 'PC' | 'Laptop' | 'Printer'
+- PC(code PK, model FK, speed, ram, hd, cd, price)
+- Laptop(code PK, model FK, speed, ram, hd, screen, price)
+- Printer(code PK, model FK, color char(1), type, price)  — color: 'y'=цветной, 'n'=ч/б`
+    },
+    aeroflot: {
+      label: 'Аэрофлот',
+      tables: [
+        { name: 'Company', cols: 'ID_comp (PK), name' },
+        { name: 'Trip', cols: 'trip_no (PK), ID_comp (FK), plane, town_from, town_to, time_out, time_in' },
+        { name: 'Passenger', cols: 'ID_psg (PK), name' },
+        { name: 'Pass_in_trip', cols: 'trip_no (FK) + date + ID_psg (FK) = PK, place' },
+      ],
+      desc: `База "Аэрофлот":
+- Company(ID_comp PK, name)
+- Trip(trip_no PK, ID_comp FK, plane, town_from, town_to, time_out, time_in)
+- Passenger(ID_psg PK, name) — имена пассажиров не уникальны, есть тёзки!
+- Pass_in_trip(trip_no FK, date, ID_psg FK, place) — PK составной`
+    },
+    ships: {
+      label: 'Корабли',
+      tables: [
+        { name: 'Classes', cols: 'class (PK), type, country, numGuns, bore, displacement' },
+        { name: 'Ships', cols: 'name (PK), class (FK), launched' },
+        { name: 'Battles', cols: 'name (PK), date' },
+        { name: 'Outcomes', cols: 'ship, battle (FK), result' },
+      ],
+      desc: `База "Корабли":
+- Classes(class PK, type bb|bc, country, numGuns, bore, displacement)
+- Ships(name PK, class FK→Classes, launched)
+- Battles(name PK, date)
+- Outcomes(ship, battle FK→Battles, result: sunk|damaged|OK)
+  Важно: ship в Outcomes — НЕ FK (головной корабль класса может не быть в Ships)`
+    },
+    recycling: {
+      label: 'Рециклинг',
+      tables: [
+        { name: 'Income', cols: 'point, date, inc (нет PK — несколько строк в день)' },
+        { name: 'Outcome', cols: 'point, date, out (нет PK — несколько строк в день)' },
+        { name: 'Income_o', cols: 'point (PK), date (PK), inc' },
+        { name: 'Outcome_o', cols: 'point (PK), date (PK), out' },
+      ],
+      desc: `База "Пункты рециклинга":
+- Income(point, date, inc) — без PK, несколько записей в день возможны
+- Outcome(point, date, out) — без PK, несколько записей в день возможны
+- Income_o(point PK, date PK, inc) — одна запись в день
+- Outcome_o(point PK, date PK, out) — одна запись в день`
+    },
+    unknown: {
+      label: 'Другая',
+      tables: [],
+      desc: ''
+    }
+  };
+
+  const SYSTEM_PROMPT = `Ты SQL-помощник для студентов, решающих задачи на sql-ex.ru (СУБД PostgreSQL).
+
+Структурируй ответ СТРОГО в следующем Markdown-формате:
+
+## 💡 Идея решения
+[3–4 пронумерованных шага — логический подход к задаче]
+
+## ✅ Готовое решение
+\`\`\`sql
+[Полный правильный SQL-запрос для PostgreSQL]
+\`\`\`
+
+## 📝 Разбор по строкам
+[Для каждой ключевой строки: \`строка кода\` — объяснение её роли]
+
+## ❌ Типичные ошибки
+[2–3 частые ошибки: **Название ошибки** + код в sql-блоке + почему неверно]
+
+## 📚 База знаний
+[3–5 концепций SQL из этой задачи: **Концепция** — краткое объяснение с мини-примером]
+
+Отвечай строго на русском языке. Будь конкретным и образовательным.`;
+
+  // ── State ──────────────────────────────────────────────────────────────────
+  let mode = 'text';
+  let uploadedImage = null;
+  let lastMarkdown = '';
+
+  // ── Init ───────────────────────────────────────────────────────────────────
+  window.addEventListener('load', () => {
+    if (!localStorage.getItem('gemini_api_key')) openSettings();
+    updateSchema();
+    setupDragDrop();
+  });
+
+  // ── Schema ─────────────────────────────────────────────────────────────────
+  function updateSchema() {
+    const key = document.getElementById('dbSchema').value;
+    const schema = SCHEMAS[key];
+    const box = document.getElementById('schemaBox');
+
+    if (!schema.tables.length) {
+      box.innerHTML = '<div style="font-size:12px;color:var(--muted)">Опиши таблицы в условии задания</div>';
+      return;
+    }
+
+    box.innerHTML = `
+      <div class="schema-name">${schema.label}</div>
+      ${schema.tables.map(t => `
+        <div class="schema-table-row">
+          <div class="schema-table-name">${t.name}</div>
+          <div class="schema-cols">${t.cols}</div>
+        </div>
+      `).join('')}
+    `;
+  }
+
+  // ── Input mode ─────────────────────────────────────────────────────────────
+  function setMode(m) {
+    mode = m;
+    const isText = m === 'text';
+    document.getElementById('textMode').classList.toggle('hidden', !isText);
+    document.getElementById('imageMode').classList.toggle('hidden', isText);
+    document.getElementById('btnModeText').classList.toggle('active', isText);
+    document.getElementById('btnModeImg').classList.toggle('active', !isText);
+  }
+
+  // ── Drag & Drop ────────────────────────────────────────────────────────────
+  function setupDragDrop() {
+    const zone = document.getElementById('dropZone');
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      zone.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file?.type.startsWith('image/')) processImage(file);
+    });
+  }
+
+  function handleFile(e) { processImage(e.target.files[0]); }
+
+  function processImage(file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const src = e.target.result;
+      uploadedImage = { data: src.split(',')[1], mimeType: file.type };
+      document.getElementById('previewImg').src = src;
+      document.getElementById('imgPreview').classList.remove('hidden');
+      document.getElementById('dropZone').classList.add('hidden');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function clearImage() {
+    uploadedImage = null;
+    document.getElementById('imgPreview').classList.add('hidden');
+    document.getElementById('dropZone').classList.remove('hidden');
+    document.getElementById('fileInput').value = '';
+  }
+
+  // ── Generate ───────────────────────────────────────────────────────────────
+  async function generate() {
+    const apiKey = localStorage.getItem('gemini_api_key');
+    if (!apiKey) { openSettings(); return; }
+
+    const num    = document.getElementById('taskNumber').value.trim();
+    const text   = document.getElementById('taskText').value.trim();
+    const dbKey  = document.getElementById('dbSchema').value;
+    const schema = SCHEMAS[dbKey];
+
+    if (mode === 'text' && !text) { alert('Введи условие задания!'); return; }
+    if (mode === 'image' && !uploadedImage) { alert('Загрузи скриншот задания!'); return; }
+
+    setState('loading');
+
+    const userMsg = [
+      num ? `Задание №${num}:` : 'Задание:',
+      mode === 'text' ? text : '(условие на скриншоте выше)',
+      schema.desc ? `\nБаза данных:\n${schema.desc}` : ''
+    ].join('\n');
+
+    const parts = [{ text: SYSTEM_PROMPT + '\n\n' + userMsg }];
+    if (mode === 'image' && uploadedImage) {
+      parts.push({ inline_data: { mime_type: uploadedImage.mimeType, data: uploadedImage.data } });
+    }
+
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts }] })
+        }
+      );
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error?.message || `HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      const answer = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!answer) throw new Error('Пустой ответ от модели');
+
+      lastMarkdown = answer;
+      renderResult(num, dbKey, answer);
+      setState('result');
+
+    } catch (err) {
+      setState('empty');
+      alert('Ошибка: ' + err.message + '\n\nПроверь API ключ в настройках.');
+    }
+  }
+
+  // ── Render Result ──────────────────────────────────────────────────────────
+  function renderResult(num, dbKey, markdown) {
+    document.getElementById('resultTitle').textContent = num
+      ? `Задание №${num}`
+      : 'Решение задания';
+    document.getElementById('resultTag').textContent = SCHEMAS[dbKey]?.label
+      ? `📦 ${SCHEMAS[dbKey].label} · PostgreSQL`
+      : 'PostgreSQL';
+
+    marked.setOptions({ gfm: true, breaks: true });
+    const html = marked.parse(markdown);
+    const content = document.getElementById('resultContent');
+    content.innerHTML = html;
+
+    // Syntax highlight + copy buttons
+    content.querySelectorAll('pre code').forEach(block => {
+      hljs.highlightElement(block);
+      const pre = block.parentElement;
+      const btn = document.createElement('button');
+      btn.className = 'copy-btn';
+      btn.textContent = 'Копировать';
+      btn.onclick = () => {
+        navigator.clipboard.writeText(block.textContent.trim()).then(() => {
+          btn.textContent = '✓ Скопировано';
+          btn.classList.add('copied');
+          setTimeout(() => {
+            btn.textContent = 'Копировать';
+            btn.classList.remove('copied');
+          }, 2000);
+        });
+      };
+      pre.appendChild(btn);
+    });
+  }
+
+  // ── UI State ────────────────────────────────────────────────────────────────
+  function setState(s) {
+    document.getElementById('stateEmpty').classList.toggle('hidden', s !== 'empty');
+    document.getElementById('stateLoading').classList.toggle('hidden', s !== 'loading');
+    document.getElementById('stateResult').classList.toggle('hidden', s !== 'result');
+
+    const btn = document.getElementById('generateBtn');
+    btn.disabled = s === 'loading';
+    document.getElementById('btnIcon').textContent  = s === 'loading' ? '⏳' : '✨';
+    document.getElementById('btnLabel').textContent = s === 'loading' ? 'Генерирую...' : 'Решить задание';
+  }
+
+  function copyAll() {
+    navigator.clipboard.writeText(lastMarkdown).then(() => {
+      const btn = event.target;
+      btn.textContent = '✓ Скопировано';
+      setTimeout(() => btn.textContent = '📋 Копировать ответ', 2000);
+    });
+  }
+
+  // ── Settings Modal ─────────────────────────────────────────────────────────
+  function openSettings() {
+    document.getElementById('apiKeyInput').value = localStorage.getItem('gemini_api_key') || '';
+    document.getElementById('modalOverlay').classList.add('open');
+  }
+  function closeSettings() {
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+  function closeSettingsOutside(e) {
+    if (e.target === document.getElementById('modalOverlay')) closeSettings();
+  }
+  function saveSettings() {
+    const key = document.getElementById('apiKeyInput').value.trim();
+    if (!key) { alert('Введи API ключ!'); return; }
+    localStorage.setItem('gemini_api_key', key);
+    closeSettings();
+  }
+  </script>
+</body>
+</html>
