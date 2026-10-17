@@ -550,12 +550,16 @@
       <div class="modal-title">⚙️ Настройки</div>
       <div class="modal-sub">Ключ хранится только в твоём браузере (localStorage)</div>
 
-      <label class="field-label">Gemini API Ключ</label>
-      <input id="apiKeyInput" type="password" placeholder="AIzaSy..." style="margin-bottom:6px;">
-      <div class="modal-hint">
-        Получить бесплатно: <a href="https://aistudio.google.com/app/apikey" target="_blank" class="modal-link">aistudio.google.com</a><br>
-        Используется модель <strong>gemini-2.0-flash</strong> (бесплатный тариф)
-      </div>
+      <label class="field-label">Провайдер AI</label>
+      <select id="providerSelect" onchange="updateProviderUI()" style="margin-bottom:12px;">
+        <option value="groq">🟢 Groq — бесплатно (Llama 3.3 / DeepSeek R1)</option>
+        <option value="gemini">🔵 Google Gemini — бесплатно (gemini-2.0-flash)</option>
+        <option value="deepseek">🟣 DeepSeek — платно (~$0.001 за запрос)</option>
+      </select>
+
+      <label class="field-label" id="keyLabel">API Ключ</label>
+      <input id="apiKeyInput" type="password" placeholder="" style="margin-bottom:6px;">
+      <div class="modal-hint" id="providerHint"></div>
 
       <div class="modal-actions">
         <button class="btn-save" onclick="saveSettings()">Сохранить</button>
@@ -563,6 +567,19 @@
       </div>
     </div>
   </div>
+
+  <style>
+    .provider-badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-weight: 600;
+      margin-left: 8px;
+    }
+    .badge-groq     { background: rgba(34,197,94,0.15); color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
+    .badge-gemini   { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+    .badge-deepseek { background: rgba(168,85,247,0.15); color: #c084fc; border: 1px solid rgba(168,85,247,0.3); }
+  </style>
 
   <script>
   // ── Data ─────────────────────────────────────────────────────────────────
@@ -660,12 +677,6 @@
   let uploadedImage = null;
   let lastMarkdown = '';
 
-  // ── Init ───────────────────────────────────────────────────────────────────
-  window.addEventListener('load', () => {
-    if (!localStorage.getItem('gemini_api_key')) openSettings();
-    updateSchema();
-    setupDragDrop();
-  });
 
   // ── Schema ─────────────────────────────────────────────────────────────────
   function updateSchema() {
@@ -733,9 +744,61 @@
     document.getElementById('fileInput').value = '';
   }
 
+  // ── Provider config ────────────────────────────────────────────────────────
+  const PROVIDERS = {
+    groq: {
+      label: 'Groq',
+      badgeClass: 'badge-groq',
+      placeholder: 'gsk_...',
+      hint: `Бесплатно, без карты:<br>1. Зарегистрируйся на <a href="https://console.groq.com" target="_blank" class="modal-link">console.groq.com</a><br>2. API Keys → Create API Key<br>Модель: <strong>llama-3.3-70b-versatile</strong> (14 400 запросов/день бесплатно)`,
+      storageKey: 'groq_api_key',
+    },
+    gemini: {
+      label: 'Gemini',
+      badgeClass: 'badge-gemini',
+      placeholder: 'AIzaSy...',
+      hint: `Бесплатно, без карты:<br>Получи ключ на <a href="https://aistudio.google.com/app/apikey" target="_blank" class="modal-link">aistudio.google.com</a><br>Модель: <strong>gemini-2.0-flash</strong> (1500 запросов/день бесплатно)`,
+      storageKey: 'gemini_api_key',
+    },
+    deepseek: {
+      label: 'DeepSeek',
+      badgeClass: 'badge-deepseek',
+      placeholder: 'sk-...',
+      hint: `Платный, очень дёшево (~$0.001/запрос):<br>Получи ключ на <a href="https://platform.deepseek.com/api_keys" target="_blank" class="modal-link">platform.deepseek.com</a><br>Модель: <strong>deepseek-chat</strong>`,
+      storageKey: 'deepseek_api_key',
+    },
+  };
+
+  function updateProviderUI() {
+    const pKey = document.getElementById('providerSelect').value;
+    const p = PROVIDERS[pKey];
+    document.getElementById('apiKeyInput').placeholder = p.placeholder;
+    document.getElementById('providerHint').innerHTML = p.hint;
+    document.getElementById('apiKeyInput').value = localStorage.getItem(p.storageKey) || '';
+  }
+
+  function getActiveProvider() {
+    return localStorage.getItem('active_provider') || 'groq';
+  }
+
+  function updateHeaderBadge(providerKey) {
+    const p = PROVIDERS[providerKey];
+    let badge = document.getElementById('providerBadge');
+    if (!badge) {
+      badge = document.createElement('span');
+      badge.id = 'providerBadge';
+      badge.className = 'provider-badge';
+      document.querySelector('.logo-sub').appendChild(badge);
+    }
+    badge.className = `provider-badge ${p.badgeClass}`;
+    badge.textContent = p.label;
+  }
+
   // ── Generate ───────────────────────────────────────────────────────────────
   async function generate() {
-    const apiKey = localStorage.getItem('gemini_api_key');
+    const providerKey = getActiveProvider();
+    const p = PROVIDERS[providerKey];
+    const apiKey = localStorage.getItem(p.storageKey);
     if (!apiKey) { openSettings(); return; }
 
     const num    = document.getElementById('taskNumber').value.trim();
@@ -760,23 +823,7 @@
     }
 
     try {
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts }] })
-        }
-      );
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error?.message || `HTTP ${res.status}`);
-      }
-
-      const data = await res.json();
-      const answer = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!answer) throw new Error('Пустой ответ от модели');
+      const answer = await callAI(providerKey, apiKey, SYSTEM_PROMPT + '\n\n' + userMsg, uploadedImage);
 
       lastMarkdown = answer;
       renderResult(num, dbKey, answer);
@@ -787,6 +834,53 @@
       alert('Ошибка: ' + err.message + '\n\nПроверь API ключ в настройках.');
     }
   }
+
+  // ── AI routing ─────────────────────────────────────────────────────────────
+  async function callAI(providerKey, apiKey, prompt, image) {
+    if (providerKey === 'gemini') {
+      const parts = [{ text: prompt }];
+      if (image) parts.push({ inline_data: { mime_type: image.mimeType, data: image.data } });
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts }] }) }
+      );
+      if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error?.message || `HTTP ${res.status}`); }
+      const data = await res.json();
+      return data.candidates?.[0]?.content?.parts?.[0]?.text || (() => { throw new Error('Пустой ответ'); })();
+    }
+
+    if (providerKey === 'groq') {
+      const messages = [{ role: 'user', content: prompt }];
+      // Groq doesn't support image in standard endpoint for free, append as text note
+      if (image) messages[0].content += '\n[Скриншот задания прикреплён пользователем — опиши и реши задачу по контексту]';
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+        body: JSON.stringify({ model: 'llama-3.3-70b-versatile', messages, temperature: 0.3 })
+      });
+      if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error?.message || `HTTP ${res.status}`); }
+      const data = await res.json();
+      return data.choices?.[0]?.message?.content || (() => { throw new Error('Пустой ответ'); })();
+    }
+
+    if (providerKey === 'deepseek') {
+      const messages = [{ role: 'user', content: prompt }];
+      if (image) messages[0].content += '\n[Скриншот задания прикреплён пользователем — опиши и реши задачу по контексту]';
+      const res = await fetch('https://api.deepseek.com/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+        body: JSON.stringify({ model: 'deepseek-chat', messages, temperature: 0.3 })
+      });
+      if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e.error?.message || `HTTP ${res.status}`); }
+      const data = await res.json();
+      return data.choices?.[0]?.message?.content || (() => { throw new Error('Пустой ответ'); })();
+    }
+
+    throw new Error('Неизвестный провайдер');
+  }
+
+
 
   // ── Render Result ──────────────────────────────────────────────────────────
   function renderResult(num, dbKey, markdown) {
@@ -845,7 +939,9 @@
 
   // ── Settings Modal ─────────────────────────────────────────────────────────
   function openSettings() {
-    document.getElementById('apiKeyInput').value = localStorage.getItem('gemini_api_key') || '';
+    const active = getActiveProvider();
+    document.getElementById('providerSelect').value = active;
+    updateProviderUI();
     document.getElementById('modalOverlay').classList.add('open');
   }
   function closeSettings() {
@@ -855,11 +951,24 @@
     if (e.target === document.getElementById('modalOverlay')) closeSettings();
   }
   function saveSettings() {
-    const key = document.getElementById('apiKeyInput').value.trim();
+    const pKey = document.getElementById('providerSelect').value;
+    const key  = document.getElementById('apiKeyInput').value.trim();
     if (!key) { alert('Введи API ключ!'); return; }
-    localStorage.setItem('gemini_api_key', key);
+    localStorage.setItem(PROVIDERS[pKey].storageKey, key);
+    localStorage.setItem('active_provider', pKey);
+    updateHeaderBadge(pKey);
     closeSettings();
   }
+
+  // ── Init ───────────────────────────────────────────────────────────────────
+  window.addEventListener('load', () => {
+    const active = getActiveProvider();
+    const p = PROVIDERS[active];
+    if (!localStorage.getItem(p.storageKey)) openSettings();
+    else updateHeaderBadge(active);
+    updateSchema();
+    setupDragDrop();
+  });
   </script>
 </body>
 </html>
